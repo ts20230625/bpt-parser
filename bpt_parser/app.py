@@ -247,8 +247,8 @@ class BPTParserApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("BPT Parser")
-        self.setMinimumSize(850, 600)
-        self.resize(850, 700)
+        self.setMinimumSize(820, 600)
+        self.resize(820, 700)
         self._editor = None
         self._parsed = None
         self._base_addr = 0
@@ -409,7 +409,7 @@ class BPTParserApp(QMainWindow):
 
         splitter.addWidget(self._tree)
         splitter.addWidget(right_splitter)
-        splitter.setSizes([300, 550])
+        splitter.setSizes([300, 520])
 
         main_layout.addWidget(splitter)
 
