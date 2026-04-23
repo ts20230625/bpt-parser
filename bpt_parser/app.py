@@ -1,12 +1,14 @@
 import sys
-import struct
+import json
+import os
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QTreeWidget, QTreeWidgetItem, QLabel, QLineEdit, QComboBox,
     QPushButton, QToolBar, QAction, QFileDialog, QMessageBox,
-    QSplitter, QTextEdit, QFormLayout, QGroupBox, QHeaderView,
+    QSplitter, QTextEdit, QFormLayout, QGroupBox, QMenu, QToolButton,
+    QSizePolicy,
 )
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, QSettings
 from PyQt5.QtGui import QColor, QFont, QTextCharFormat
 
 from bpt_parser.hex_io import read_hex, read_bin, write_hex, write_bin
@@ -17,147 +19,225 @@ from bpt_parser.fields import FieldType
 
 DARK_STYLESHEET = """
 QMainWindow, QWidget {
-    background-color: #1a1a2e;
-    color: #e0e0e0;
+    background-color: #1e1e2e;
+    color: #cdd6f4;
     font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
-    font-size: 13px;
+    font-size: 12px;
 }
 QToolBar {
-    background-color: #16213e;
+    background-color: #181825;
     border: none;
-    padding: 4px;
-    spacing: 6px;
+    border-bottom: 1px solid #313244;
+    padding: 2px;
+    spacing: 4px;
 }
 QToolBar QToolButton {
-    background-color: #0f3460;
-    color: #53d8fb;
-    border: 1px solid #1a3a6a;
-    border-radius: 4px;
-    padding: 6px 14px;
-    font-size: 13px;
+    background-color: rgba(49, 50, 68, 160);
+    color: #89b4fa;
+    border: 1px solid rgba(137, 180, 250, 50);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
 }
 QToolBar QToolButton:hover {
-    background-color: #1a4a80;
+    background-color: rgba(69, 71, 90, 200);
+    border: 1px solid rgba(137, 180, 250, 100);
 }
 QToolBar QToolButton:pressed {
-    background-color: #0a2540;
+    background-color: rgba(30, 30, 46, 220);
+    border: 1px solid rgba(137, 180, 250, 40);
+}
+QToolBar QToolButton::menu-indicator {
+    image: none;
+    border: none;
 }
 QTreeWidget {
-    background-color: #0f3460;
-    color: #e0e0e0;
-    border: 1px solid #1a3a6a;
-    border-radius: 4px;
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+    border: 1px solid #313244;
+    border-radius: 6px;
     outline: none;
-    font-size: 13px;
+    font-size: 12px;
+    alternate-background-color: #181825;
 }
 QTreeWidget::item {
-    padding: 3px 0px;
-    border-bottom: 1px solid #0a2540;
+    padding: 2px 4px;
+    border-bottom: 1px solid #313244;
 }
 QTreeWidget::item:selected {
-    background-color: #1a4a80;
-    color: #53d8fb;
+    background-color: #45475a;
+    color: #89b4fa;
+    border-radius: 3px;
 }
 QTreeWidget::item:hover {
-    background-color: #162d50;
+    background-color: #313244;
+    border-radius: 3px;
+}
+QTreeWidget::branch {
+    background-color: transparent;
+}
+QHeaderView::section {
+    background-color: #181825;
+    color: #a6adc8;
+    border: none;
+    border-bottom: 1px solid #313244;
+    border-right: 1px solid #313244;
+    padding: 4px 6px;
+    font-size: 12px;
 }
 QGroupBox {
-    background-color: #0f3460;
-    border: 1px solid #1a3a6a;
-    border-radius: 6px;
-    margin-top: 12px;
-    padding: 10px;
-    padding-top: 20px;
-    font-size: 13px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid #313244;
+    margin-top: 8px;
+    padding: 6px;
+    padding-top: 16px;
+    font-size: 12px;
 }
 QGroupBox::title {
-    color: #53d8fb;
+    color: #89b4fa;
     subcontrol-origin: margin;
-    left: 10px;
-    padding: 0 6px;
+    left: 8px;
+    padding: 0 4px;
 }
 QLabel {
-    color: #aaaaaa;
-    font-size: 13px;
+    color: #a6adc8;
+    font-size: 12px;
 }
 QLabel#field_value {
-    color: #0cce6b;
-    font-size: 14px;
+    color: #a6e3a1;
+    font-size: 12px;
     font-weight: bold;
+    font-family: "Consolas", "Courier New", monospace;
 }
 QLabel#field_name {
-    color: #53d8fb;
-    font-size: 14px;
+    color: #89b4fa;
+    font-size: 12px;
     font-weight: bold;
 }
 QLineEdit {
-    background-color: #16213e;
-    color: #0cce6b;
-    border: 1px solid #1a3a6a;
+    background-color: #313244;
+    color: #a6e3a1;
+    border: 1px solid #45475a;
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 2px 6px;
     font-family: "Consolas", "Courier New", monospace;
-    font-size: 13px;
+    font-size: 12px;
+    selection-background-color: #585b70;
 }
 QLineEdit:focus {
-    border-color: #53d8fb;
+    border-color: #89b4fa;
 }
 QComboBox {
-    background-color: #16213e;
-    color: #0cce6b;
-    border: 1px solid #1a3a6a;
+    background-color: #313244;
+    color: #a6e3a1;
+    border: 1px solid #45475a;
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 2px 6px;
+    font-size: 12px;
 }
 QComboBox::drop-down {
     border: none;
+    width: 16px;
+}
+QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #89b4fa;
+    margin-right: 4px;
 }
 QComboBox QAbstractItemView {
-    background-color: #16213e;
-    color: #e0e0e0;
-    selection-background-color: #1a4a80;
+    background-color: #313244;
+    color: #cdd6f4;
+    selection-background-color: #45475a;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    outline: none;
 }
 QTextEdit {
-    background-color: #0a1830;
-    color: #0cce6b;
-    border: 1px solid #1a3a6a;
-    border-radius: 4px;
+    background-color: #181825;
+    color: #a6e3a1;
+    border: 1px solid #313244;
+    border-radius: 6px;
     font-family: "Consolas", "Courier New", monospace;
-    font-size: 12px;
+    font-size: 11px;
     padding: 4px;
+    selection-background-color: #45475a;
 }
 QSplitter::handle {
-    background-color: #1a3a6a;
+    background-color: #313244;
 }
 QScrollBar:vertical {
-    background-color: #0a1830;
-    width: 10px;
+    background-color: transparent;
+    width: 8px;
     border: none;
 }
 QScrollBar::handle:vertical {
-    background-color: #1a3a6a;
-    border-radius: 5px;
-    min-height: 20px;
+    background-color: #45475a;
+    border-radius: 4px;
+    min-height: 16px;
+}
+QScrollBar::handle:vertical:hover {
+    background-color: #585b70;
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
 }
+QScrollBar:horizontal {
+    background-color: transparent;
+    height: 8px;
+    border: none;
+}
+QScrollBar::handle:horizontal {
+    background-color: #45475a;
+    border-radius: 4px;
+    min-width: 16px;
+}
+QScrollBar::handle:horizontal:hover {
+    background-color: #585b70;
+}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
+QMenu {
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    padding: 4px;
+}
+QMenu::item {
+    padding: 4px 24px;
+    border-radius: 3px;
+}
+QMenu::item:selected {
+    background-color: #45475a;
+    color: #89b4fa;
+}
+QMenu::separator {
+    height: 1px;
+    background-color: #45475a;
+    margin: 2px 8px;
+}
 QMessageBox {
-    background-color: #1a1a2e;
-    color: #e0e0e0;
+    background-color: #1e1e2e;
+    color: #cdd6f4;
 }
 QMessageBox QLabel {
-    color: #e0e0e0;
+    color: #cdd6f4;
 }
 QPushButton {
-    background-color: #0f3460;
-    color: #53d8fb;
-    border: 1px solid #1a3a6a;
-    border-radius: 4px;
-    padding: 6px 16px;
+    background-color: rgba(49, 50, 68, 160);
+    color: #89b4fa;
+    border: 1px solid rgba(137, 180, 250, 50);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 11px;
 }
 QPushButton:hover {
-    background-color: #1a4a80;
+    background-color: rgba(69, 71, 90, 200);
+    border: 1px solid rgba(137, 180, 250, 100);
 }
 """
 
@@ -166,15 +246,16 @@ class BPTParserApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("BPT Parser")
-        self.setMinimumSize(1200, 700)
-        self.resize(1400, 800)
+        self.setMinimumSize(920, 600)
+        self.resize(920, 700)
         self._editor = None
         self._parsed = None
         self._modified_offsets = set()
+        self._updating_detail = False
+        self._settings = QSettings("BPTParser", "BPTParser")
         self._setup_toolbar()
         self._setup_layout()
-        self._act_import_hex.triggered.connect(lambda: self._import_file(True))
-        self._act_import_bin.triggered.connect(lambda: self._import_file(False))
+        self._act_import.triggered.connect(self._import_file)
         self._act_save_hex.triggered.connect(lambda: self._save_file(True))
         self._act_save_bin.triggered.connect(lambda: self._save_file(False))
         self._act_undo.triggered.connect(self._undo_all)
@@ -182,42 +263,109 @@ class BPTParserApp(QMainWindow):
     def _setup_toolbar(self):
         toolbar = QToolBar("Main Toolbar")
         toolbar.setMovable(False)
-        toolbar.setIconSize(QSize(20, 20))
+        toolbar.setIconSize(QSize(16, 16))
         self.addToolBar(toolbar)
 
-        self._act_import_hex = QAction("导入 HEX", self)
-        self._act_import_bin = QAction("导入 BIN", self)
-        self._act_save_hex = QAction("另存为 HEX", self)
-        self._act_save_bin = QAction("另存为 BIN", self)
-        self._act_undo = QAction("撤销所有改动", self)
+        self._act_import = QAction("导入", self)
+        self._act_save_hex = QAction("另存HEX", self)
+        self._act_save_bin = QAction("另存BIN", self)
+        self._act_undo = QAction("撤销", self)
 
-        toolbar.addAction(self._act_import_hex)
-        toolbar.addAction(self._act_import_bin)
+        toolbar.addAction(self._act_import)
+
+        # Recent files dropdown
+        self._recent_btn = QToolButton(self)
+        self._recent_btn.setText("最近文件 ▾")
+        self._recent_menu = QMenu(self)
+        self._recent_btn.setMenu(self._recent_menu)
+        self._recent_btn.setPopupMode(QToolButton.InstantPopup)
+        self._recent_btn.setStyleSheet("""
+            QToolButton {
+                background-color: rgba(49, 50, 68, 160);
+                color: #cba6f7;
+                border: 1px solid rgba(203, 166, 247, 50);
+                border-radius: 6px;
+                padding: 3px 10px;
+                font-size: 11px;
+            }
+            QToolButton:hover {
+                background-color: rgba(69, 71, 90, 200);
+                border: 1px solid rgba(203, 166, 247, 100);
+            }
+        """)
+        toolbar.addWidget(self._recent_btn)
+        self._refresh_recent_menu()
+
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        toolbar.addWidget(spacer)
+
         toolbar.addSeparator()
         toolbar.addAction(self._act_save_hex)
         toolbar.addAction(self._act_save_bin)
         toolbar.addSeparator()
         toolbar.addAction(self._act_undo)
 
+    def _refresh_recent_menu(self):
+        self._recent_menu.clear()
+        recent = self._settings.value("recent_files", [], type=list)
+        if not recent:
+            act = self._recent_menu.addAction("（无最近文件）")
+            act.setEnabled(False)
+        else:
+            for path in recent[:10]:
+                display = os.path.basename(path)
+                act = self._recent_menu.addAction(display)
+                act.setData(path)
+                act.setToolTip(path)
+                act.triggered.connect(lambda checked, p=path: self._open_recent(p))
+            self._recent_menu.addSeparator()
+            clear_act = self._recent_menu.addAction("清除记录")
+            clear_act.triggered.connect(self._clear_recent)
+
+    def _add_recent(self, path):
+        recent = self._settings.value("recent_files", [], type=list)
+        path = os.path.abspath(path)
+        if path in recent:
+            recent.remove(path)
+        recent.insert(0, path)
+        recent = recent[:10]
+        self._settings.setValue("recent_files", recent)
+        self._refresh_recent_menu()
+
+    def _clear_recent(self):
+        self._settings.setValue("recent_files", [])
+        self._refresh_recent_menu()
+
+    def _open_recent(self, path):
+        if not os.path.exists(path):
+            QMessageBox.warning(self, "文件不存在", f"文件已移动或删除:\n{path}")
+            return
+        use_hex = path.lower().endswith(".hex")
+        self._load_file(path, use_hex)
+
     def _setup_layout(self):
         central = QWidget()
         self.setCentralWidget(central)
         main_layout = QHBoxLayout(central)
-        main_layout.setContentsMargins(6, 6, 6, 6)
+        main_layout.setContentsMargins(4, 4, 4, 4)
+        main_layout.setSpacing(4)
 
         splitter = QSplitter(Qt.Horizontal)
 
         self._tree = QTreeWidget()
         self._tree.setHeaderLabel("BPT 字段结构")
-        self._tree.setMinimumWidth(250)
-        self._tree.setMaximumWidth(400)
+        self._tree.setMinimumWidth(200)
+        self._tree.setMaximumWidth(350)
+        self._tree.setAlternatingRowColors(True)
         self._tree.itemClicked.connect(self._on_tree_click)
 
         right_splitter = QSplitter(Qt.Vertical)
 
         self._detail_group = QGroupBox("字段详情")
         self._detail_form = QFormLayout(self._detail_group)
-        self._detail_form.setSpacing(8)
+        self._detail_form.setSpacing(6)
+        self._detail_form.setContentsMargins(6, 18, 6, 6)
         right_splitter.addWidget(self._detail_group)
 
         self._hex_view = QTextEdit()
@@ -225,21 +373,27 @@ class BPTParserApp(QMainWindow):
         self._hex_view.setFont(QFont("Consolas", 10))
         right_splitter.addWidget(self._hex_view)
 
-        right_splitter.setSizes([300, 400])
+        right_splitter.setSizes([250, 350])
 
         splitter.addWidget(self._tree)
         splitter.addWidget(right_splitter)
-        splitter.setSizes([350, 850])
+        splitter.setSizes([400, 400])
 
         main_layout.addWidget(splitter)
 
     # --- Import / Export ---
 
-    def _import_file(self, use_hex):
-        ext = "Intel HEX (*.hex)" if use_hex else "Binary (*.bin)"
-        path, _ = QFileDialog.getOpenFileName(self, "导入文件", "", ext)
+    def _import_file(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "导入文件", "",
+            "BPT 文件 (*.hex *.bin);;Intel HEX (*.hex);;Binary (*.bin)"
+        )
         if not path:
             return
+        use_hex = path.lower().endswith(".hex")
+        self._load_file(path, use_hex)
+
+    def _load_file(self, path, use_hex):
         try:
             if use_hex:
                 raw = read_hex(path)
@@ -249,16 +403,25 @@ class BPTParserApp(QMainWindow):
             QMessageBox.critical(self, "导入失败", str(e))
             return
 
-        if len(raw) < 0x1000:
-            QMessageBox.critical(self, "导入失败", f"文件过小: {len(raw)} 字节 (需要 0x1000)")
+        # Find the start of actual data (skip leading zero padding from sparse HEX)
+        start = 0
+        for i in range(0, len(raw), 0x1000):
+            if any(b != 0 for b in raw[i:i + min(16, len(raw) - i)]):
+                start = i
+                break
+
+        if len(raw) - start < 0x1000:
+            QMessageBox.critical(self, "导入失败", f"数据不足: {len(raw) - start} 字节 (需要 0x1000)")
             return
 
-        self._editor = BPTEditor(raw[0:0x1000])
+        self._editor = BPTEditor(raw[start:start + 0x1000])
         self._modified_offsets.clear()
         self._parsed = BPTParser(self._editor.get_current_data()).parse()
         self._populate_tree()
         self._refresh_hex_view()
         self._clear_detail()
+        self._add_recent(path)
+        self.setWindowTitle(f"BPT Parser - {os.path.basename(path)}")
 
     def _save_file(self, use_hex):
         if self._editor is None:
@@ -312,15 +475,57 @@ class BPTParserApp(QMainWindow):
         self._tree.clear()
         if not self._parsed:
             return
+        dim_color = QColor("#6c7086")
         for child in self._parsed.children:
             item = QTreeWidgetItem([child.name])
             item.setData(0, Qt.UserRole, ("struct", child))
             self._tree.addTopLevelItem(item)
             for fld in child.fields:
-                field_item = QTreeWidgetItem([fld.name])
+                val_str = self._format_field_brief(fld)
+                field_item = QTreeWidgetItem([fld.name, val_str])
                 field_item.setData(0, Qt.UserRole, ("field", fld, child))
+                field_item.setForeground(1, dim_color)
                 item.addChild(field_item)
-            item.setExpanded(True)
+
+        self._tree.setHeaderLabels(["字段", "值"])
+        header = self._tree.header()
+        header.setMinimumSectionSize(80)
+        header.resizeSection(0, 180)
+        header.setStretchLastSection(True)
+
+        for i in range(self._tree.topLevelItemCount()):
+            item = self._tree.topLevelItem(i)
+            data = item.data(0, Qt.UserRole)
+            if not data or data[0] != "struct":
+                continue
+            name = data[1].name
+            should_expand = (
+                name == "BPT Header"
+                or name == "IIB #0"
+                or "RCP" in name
+                or name == "BPT Trailer"
+            )
+            item.setExpanded(should_expand)
+
+    def _format_field_brief(self, fld):
+        if fld.value is None:
+            return ""
+        if isinstance(fld.value, int):
+            if fld.field_type == FieldType.ENUM8 and fld.enum_options:
+                for opt in fld.enum_options:
+                    if opt.value == fld.value:
+                        return opt.label
+            # For address fields: reverse bytes (high addr first)
+            if fld.name in ("Load Address", "Entry Point") and fld.size == 4:
+                raw = fld.value.to_bytes(fld.size, "big")
+                val = int.from_bytes(reversed(raw), "big")
+                return f"0x{val:08X}"
+            # Display integer as big-endian bytes (high address first)
+            raw = fld.value.to_bytes(fld.size, "big")
+            return "0x" + "".join(f"{b:02X}" for b in reversed(raw))
+        if isinstance(fld.value, str) and len(fld.value) > 20:
+            return fld.value[:18] + "…"
+        return str(fld.value)
 
     def _on_tree_click(self, item, column):
         data = item.data(0, Qt.UserRole)
@@ -349,6 +554,15 @@ class BPTParserApp(QMainWindow):
         self._highlight_range(struct.abs_offset, struct.size)
 
     def _show_field_detail(self, field, struct):
+        if self._updating_detail:
+            return
+        self._updating_detail = True
+        try:
+            self._do_show_field_detail(field, struct)
+        finally:
+            self._updating_detail = False
+
+    def _do_show_field_detail(self, field, struct):
         self._clear_detail()
         self._detail_group.setTitle(field.name)
 
@@ -367,79 +581,121 @@ class BPTParserApp(QMainWindow):
         self._detail_form.addRow("描述", desc_lbl)
 
         # Value display / editor
+        def _d1_val(fld):
+            if not isinstance(fld.value, int):
+                s = str(fld.value)
+                if len(s) > 80:
+                    return s[:76] + "…"
+                return s
+            raw = fld.value.to_bytes(fld.size, "big")
+            val = int.from_bytes(reversed(raw), "big")
+            if fld.name in ("Load Address", "Entry Point") and fld.size == 4:
+                return f"0x{val:08X}"
+            return f"0x{val:X} ({val})"
+
+        def _val_row(widget, fld, st):
+            ao = st.abs_offset + fld.offset
+            modified = self._editor.original_bytes[ao:ao + fld.size] != self._editor.current_bytes[ao:ao + fld.size]
+            row = QHBoxLayout()
+            row.setContentsMargins(0, 0, 0, 0)
+            row.addWidget(widget, 1)
+            if modified:
+                btn = QPushButton("恢复")
+                btn.setFixedWidth(50)
+                btn.clicked.connect(lambda: self._restore_field(fld, st))
+                row.addWidget(btn)
+            w = QWidget()
+            w.setLayout(row)
+            return w
+
         if field.editable and field.field_type == FieldType.ENUM8 and field.enum_options:
             combo = QComboBox()
             for opt in field.enum_options:
                 combo.addItem(f"{opt.label} (0x{opt.value:02X})", opt.value)
+            combo.blockSignals(True)
             for i, opt in enumerate(field.enum_options):
                 if opt.value == field.value:
                     combo.setCurrentIndex(i)
                     break
+            combo.blockSignals(False)
             combo.currentIndexChanged.connect(
                 lambda idx, f=field, s=struct, c=combo: self._on_enum_changed(f, s, c)
             )
-            self._detail_form.addRow("值", combo)
+            self._detail_form.addRow("值", _val_row(combo, field, struct))
         elif field.editable and field.size <= 8 and field.field_type != FieldType.BYTES:
-            val_str = f"0x{field.value:X}" if isinstance(field.value, int) else str(field.value)
-            edit = QLineEdit(val_str)
+            edit = QLineEdit(_d1_val(field))
             edit.returnPressed.connect(
                 lambda le=edit, f=field, s=struct: self._on_field_edited(f, s, le)
             )
-            self._detail_form.addRow("值", edit)
+            self._detail_form.addRow("值", _val_row(edit, field, struct))
         elif field.editable and field.field_type == FieldType.BYTES:
             val_str = field.value if isinstance(field.value, str) else field.value
             edit = QLineEdit(val_str)
             edit.returnPressed.connect(
                 lambda le=edit, f=field, s=struct: self._on_bytes_edited(f, s, le)
             )
-            self._detail_form.addRow("值", edit)
+            self._detail_form.addRow("值", _val_row(edit, field, struct))
         else:
-            if isinstance(field.value, int):
-                val_text = f"0x{field.value:X} ({field.value})"
-            else:
-                val_text = str(field.value)
+            val_text = _d1_val(field)
             val_lbl = QLabel(val_text)
             val_lbl.setObjectName("field_value")
             val_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
             val_lbl.setWordWrap(True)
+            val_lbl.setMaximumWidth(self._detail_group.width() - 120)
             self._detail_form.addRow("值", val_lbl)
 
         self._highlight_range(abs_offset, field.size)
 
+    # --- Single Field Restore ---
+
+    def _restore_field(self, field, struct):
+        if self._updating_detail:
+            return
+        abs_offset = struct.abs_offset + field.offset
+        original = self._editor.original_bytes
+        self._editor.current_bytes[abs_offset:abs_offset + field.size] = original[abs_offset:abs_offset + field.size]
+        self._editor._auto_update()
+        self._modified_offsets.discard(abs_offset)
+        self._parsed = BPTParser(self._editor.get_current_data()).parse()
+        self._populate_tree()
+        self._refresh_hex_view()
+        self._show_field_detail(field, struct)
+
     # --- Editing ---
 
     def _on_enum_changed(self, field, struct, combo):
+        if self._updating_detail:
+            return
         val = combo.currentData()
         abs_offset = struct.abs_offset + field.offset
         self._editor.write_uint8(abs_offset, val)
         field.value = val
         self._modified_offsets.add(abs_offset)
+        self._mark_tree_modified()
         self._refresh_hex_view()
         self._highlight_range(abs_offset, field.size)
-        self._mark_tree_modified()
 
-    def _on_field_edited(self, field, struct, line_edit):
+    def _on_int_edited(self, field, struct, line_edit):
+        if self._updating_detail:
+            return
         text = line_edit.text().strip()
         try:
             val = int(text, 16) if text.lower().startswith("0x") else int(text)
         except ValueError:
             return
         abs_offset = struct.abs_offset + field.offset
-        if field.size == 1:
-            self._editor.write_uint8(abs_offset, val)
-        elif field.size == 2:
-            self._editor.write_uint16(abs_offset, val)
-        elif field.size == 4:
-            self._editor.write_uint32(abs_offset, val)
-        elif field.size == 8:
-            self._editor.write_uint64(abs_offset, val)
-        field.value = val
+        raw = val.to_bytes(field.size, "big")
+        storage = bytes(reversed(raw))
+        self._editor.write_bytes(abs_offset, storage)
+        field.value = int.from_bytes(storage, "big")
         self._modified_offsets.add(abs_offset)
+        self._mark_tree_modified()
         self._refresh_hex_view()
         self._highlight_range(abs_offset, field.size)
-        self._mark_tree_modified()
 
     def _on_bytes_edited(self, field, struct, line_edit):
+        if self._updating_detail:
+            return
         text = line_edit.text().strip()
         try:
             raw = bytes.fromhex(text)
@@ -449,9 +705,9 @@ class BPTParserApp(QMainWindow):
         self._editor.write_bytes(abs_offset, raw[:field.size])
         field.value = text.upper()
         self._modified_offsets.add(abs_offset)
+        self._mark_tree_modified()
         self._refresh_hex_view()
         self._highlight_range(abs_offset, field.size)
-        self._mark_tree_modified()
 
     # --- Hex View ---
 
@@ -474,8 +730,9 @@ class BPTParserApp(QMainWindow):
         self._refresh_hex_view()
         doc = self._hex_view.document()
         fmt_highlight = QTextCharFormat()
-        fmt_highlight.setBackground(QColor("#e94560"))
-        fmt_highlight.setForeground(QColor("#ffffff"))
+        fmt_highlight.setBackground(QColor("#f38ba8"))
+        fmt_highlight.setForeground(QColor("#1e1e2e"))
+        range_end = offset + size
 
         for line_num in range(doc.blockCount()):
             block = doc.findBlockByNumber(line_num)
@@ -483,24 +740,46 @@ class BPTParserApp(QMainWindow):
             if not text:
                 continue
             line_offset = int(text[:8], 16)
-
-            # Check if this line overlaps with the range
             line_end = line_offset + 16
-            range_end = offset + size
             if line_offset >= range_end or line_end <= offset:
                 continue
 
-            for byte_idx in range(16):
-                byte_abs = line_offset + byte_idx
-                if offset <= byte_abs < range_end:
-                    char_start = 10 + byte_idx * 3
-                    char_end = char_start + 2
-                    cursor = self._hex_view.textCursor()
-                    pos = block.position() + char_start
-                    if pos + 2 <= doc.characterCount():
-                        cursor.setPosition(pos)
-                        cursor.setPosition(pos + 2, cursor.KeepAnchor)
-                        cursor.setCharFormat(fmt_highlight)
+            # Calculate continuous range of bytes within this line
+            first_byte = max(offset - line_offset, 0)
+            last_byte = min(range_end - line_offset, 16) - 1
+            char_start = 11 + first_byte * 3
+            char_end = 11 + last_byte * 3 + 2
+            pos_start = block.position() + char_start
+            pos_end = block.position() + char_end
+            if pos_end <= doc.characterCount():
+                cursor = self._hex_view.textCursor()
+                cursor.setPosition(pos_start)
+                cursor.setPosition(pos_end, cursor.KeepAnchor)
+                cursor.setCharFormat(fmt_highlight)
+
+        # Scroll hex view so the field range is centered vertically
+        total_lines = doc.blockCount()
+        first_line = offset // 16
+        last_line = (offset + size - 1) // 16
+        field_lines = last_line - first_line + 1
+        center_line = first_line + field_lines // 2
+
+        scrollbar = self._hex_view.verticalScrollBar()
+        viewport_height = self._hex_view.height()
+        # Estimate line height from font metrics
+        line_height = max(self._hex_view.fontMetrics().height() + 2, 1)
+        viewport_lines = max(viewport_height // line_height, 1)
+
+        target_scroll_line = max(0, center_line - viewport_lines // 2)
+        if total_lines > viewport_lines:
+            scroll_pos = int(target_scroll_line / max(total_lines - viewport_lines, 1) * scrollbar.maximum())
+            scrollbar.setValue(scroll_pos)
+        # Also set cursor for text selection context
+        target_block = doc.findBlockByNumber(first_line)
+        if target_block.isValid():
+            scroll_cursor = self._hex_view.textCursor()
+            scroll_cursor.setPosition(target_block.position())
+            self._hex_view.setTextCursor(scroll_cursor)
 
     # --- Tree Modification Marking ---
 
@@ -510,7 +789,6 @@ class BPTParserApp(QMainWindow):
             struct_data = top.data(0, Qt.UserRole)
             if not struct_data or struct_data[0] != "struct":
                 continue
-            struct_obj = struct_data[1]
             for j in range(top.childCount()):
                 child = top.child(j)
                 field_data = child.data(0, Qt.UserRole)
@@ -518,8 +796,15 @@ class BPTParserApp(QMainWindow):
                     continue
                 _, fld, s = field_data
                 abs_offset = s.abs_offset + fld.offset
+                name = fld.name
                 if abs_offset in self._modified_offsets:
-                    child.setForeground(0, QColor("#f77f00"))
+                    if not child.text(0).startswith("* "):
+                        child.setText(0, "* " + name)
+                    child.setForeground(0, QColor("#fab387"))
+                else:
+                    if child.text(0).startswith("* "):
+                        child.setText(0, name)
+                    child.setForeground(0, QColor("#cdd6f4"))
 
 
 def main():
