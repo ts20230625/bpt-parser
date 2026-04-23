@@ -404,7 +404,7 @@ class BPTParserApp(QMainWindow):
 
         right_splitter.addWidget(hex_panel)
 
-        right_splitter.setSizes([250, 350])
+        right_splitter.setSizes([200, 400])
 
         splitter.addWidget(self._tree)
         splitter.addWidget(right_splitter)
