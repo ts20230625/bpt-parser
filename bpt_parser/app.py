@@ -302,7 +302,6 @@ class BPTParserApp(QMainWindow):
         # Base address input
         self._addr_label = QLabel(" 基址:")
         self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
-        toolbar.addWidget(self._addr_label)
         self._addr_edit = QLineEdit("0x00000000")
         self._addr_edit.setFixedWidth(96)
         self._addr_edit.setFocusPolicy(Qt.StrongFocus)
@@ -318,9 +317,15 @@ class BPTParserApp(QMainWindow):
             }
         """)
         self._addr_edit.returnPressed.connect(self._on_base_addr_changed)
+        addr_w = QWidget()
+        addr_l = QHBoxLayout(addr_w)
+        addr_l.setContentsMargins(0, 0, 0, 0)
+        addr_l.setSpacing(0)
+        addr_l.addWidget(self._addr_label)
+        addr_l.addWidget(self._addr_edit)
         self._addr_label.setVisible(False)
         self._addr_edit.setVisible(False)
-        toolbar.addWidget(self._addr_edit)
+        toolbar.addWidget(addr_w)
 
         toolbar.addSeparator()
         toolbar.addAction(self._act_save)
