@@ -250,14 +250,14 @@ class BPTParserApp(QMainWindow):
         self.resize(920, 700)
         self._editor = None
         self._parsed = None
+        self._base_addr = 0
         self._modified_offsets = set()
         self._updating_detail = False
         self._settings = QSettings("BPTParser", "BPTParser")
         self._setup_toolbar()
         self._setup_layout()
         self._act_import.triggered.connect(self._import_file)
-        self._act_save_hex.triggered.connect(lambda: self._save_file(True))
-        self._act_save_bin.triggered.connect(lambda: self._save_file(False))
+        self._act_save.triggered.connect(self._save_file)
         self._act_undo.triggered.connect(self._undo_all)
 
     def _setup_toolbar(self):
@@ -267,8 +267,7 @@ class BPTParserApp(QMainWindow):
         self.addToolBar(toolbar)
 
         self._act_import = QAction("导入", self)
-        self._act_save_hex = QAction("另存HEX", self)
-        self._act_save_bin = QAction("另存BIN", self)
+        self._act_save = QAction("另存为", self)
         self._act_undo = QAction("撤销", self)
 
         toolbar.addAction(self._act_import)
@@ -301,8 +300,7 @@ class BPTParserApp(QMainWindow):
         toolbar.addWidget(spacer)
 
         toolbar.addSeparator()
-        toolbar.addAction(self._act_save_hex)
-        toolbar.addAction(self._act_save_bin)
+        toolbar.addAction(self._act_save)
         toolbar.addSeparator()
         toolbar.addAction(self._act_undo)
 
@@ -414,6 +412,7 @@ class BPTParserApp(QMainWindow):
             QMessageBox.critical(self, "导入失败", f"数据不足: {len(raw) - start} 字节 (需要 0x1000)")
             return
 
+        self._base_addr = start if use_hex else 0
         self._editor = BPTEditor(raw[start:start + 0x1000])
         self._modified_offsets.clear()
         self._parsed = BPTParser(self._editor.get_current_data()).parse()
@@ -423,16 +422,18 @@ class BPTParserApp(QMainWindow):
         self._add_recent(path)
         self.setWindowTitle(f"BPT Parser - {os.path.basename(path)}")
 
-    def _save_file(self, use_hex):
+    def _save_file(self):
         if self._editor is None:
             return
-        ext = "Intel HEX (*.hex)" if use_hex else "Binary (*.bin)"
-        path, _ = QFileDialog.getSaveFileName(self, "另存为", "", ext)
+        path, _ = QFileDialog.getSaveFileName(
+            self, "另存为", "",
+            "BPT 文件 (*.hex *.bin);;Intel HEX (*.hex);;Binary (*.bin)"
+        )
         if not path:
             return
         data = self._editor.get_current_data()
         try:
-            if use_hex:
+            if path.lower().endswith(".hex"):
                 write_hex(path, data)
             else:
                 write_bin(path, data)
@@ -723,7 +724,7 @@ class BPTParserApp(QMainWindow):
             ascii_parts = "".join(
                 chr(b) if 0x20 <= b < 0x7F else "." for b in chunk
             )
-            lines.append(f"{offset:08X}:  {hex_parts:<48s}  {ascii_parts}")
+            lines.append(f"{self._base_addr + offset:08X}:  {hex_parts:<48s}  {ascii_parts}")
         self._hex_view.setPlainText("\n".join(lines))
 
     def _highlight_range(self, offset, size):
@@ -732,7 +733,8 @@ class BPTParserApp(QMainWindow):
         fmt_highlight = QTextCharFormat()
         fmt_highlight.setBackground(QColor("#f38ba8"))
         fmt_highlight.setForeground(QColor("#1e1e2e"))
-        range_end = offset + size
+        abs_offset = self._base_addr + offset
+        range_end = abs_offset + size
 
         for line_num in range(doc.blockCount()):
             block = doc.findBlockByNumber(line_num)
@@ -741,11 +743,10 @@ class BPTParserApp(QMainWindow):
                 continue
             line_offset = int(text[:8], 16)
             line_end = line_offset + 16
-            if line_offset >= range_end or line_end <= offset:
+            if line_offset >= range_end or line_end <= abs_offset:
                 continue
 
-            # Calculate continuous range of bytes within this line
-            first_byte = max(offset - line_offset, 0)
+            first_byte = max(abs_offset - line_offset, 0)
             last_byte = min(range_end - line_offset, 16) - 1
             char_start = 11 + first_byte * 3
             char_end = 11 + last_byte * 3 + 2
