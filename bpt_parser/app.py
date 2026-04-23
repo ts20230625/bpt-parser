@@ -295,6 +295,29 @@ class BPTParserApp(QMainWindow):
         toolbar.addWidget(self._recent_btn)
         self._refresh_recent_menu()
 
+        # Base address input
+        self._addr_label = QLabel(" 基址: 0x")
+        self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
+        toolbar.addWidget(self._addr_label)
+        self._addr_edit = QLineEdit("00000000")
+        self._addr_edit.setFixedWidth(72)
+        self._addr_edit.setInputMask("HHHHHHHH")
+        self._addr_edit.setStyleSheet("""
+            QLineEdit {
+                background-color: #181825;
+                color: #89b4fa;
+                border: 1px solid #313244;
+                border-radius: 4px;
+                padding: 2px 4px;
+                font-size: 11px;
+                font-family: monospace;
+            }
+        """)
+        self._addr_edit.returnPressed.connect(self._on_base_addr_changed)
+        self._addr_label.setVisible(False)
+        self._addr_edit.setVisible(False)
+        toolbar.addWidget(self._addr_edit)
+
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         toolbar.addWidget(spacer)
@@ -421,6 +444,17 @@ class BPTParserApp(QMainWindow):
         self._clear_detail()
         self._add_recent(path)
         self.setWindowTitle(f"BPT Parser - {os.path.basename(path)}")
+        self._addr_edit.setText(f"{self._base_addr:08X}")
+        self._addr_label.setVisible(True)
+        self._addr_edit.setVisible(True)
+
+    def _on_base_addr_changed(self):
+        try:
+            self._base_addr = int(self._addr_edit.text(), 16)
+        except ValueError:
+            return
+        self._addr_edit.setText(f"{self._base_addr:08X}")
+        self._refresh_hex_view()
 
     def _save_file(self):
         if self._editor is None:
