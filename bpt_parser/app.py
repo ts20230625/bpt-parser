@@ -161,7 +161,7 @@ QTextEdit {
     border: 1px solid #313244;
     border-radius: 6px;
     font-family: "Consolas", "Courier New", monospace;
-    font-size: 11px;
+    font-size: 16px;
     padding: 4px;
     selection-background-color: #45475a;
 }
