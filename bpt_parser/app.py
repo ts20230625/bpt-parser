@@ -299,13 +299,12 @@ class BPTParserApp(QMainWindow):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         toolbar.addWidget(spacer)
 
-        # Base address input (wrapped for toolbar focus)
-        self._addr_label = QLabel("基址:0x")
-        self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px; margin-right: 0px;")
-        self._addr_label.setFixedWidth(self._addr_label.sizeHint().width() + 4)
-        self._addr_edit = QLineEdit("00000000")
-        self._addr_edit.setFixedWidth(80)
-        self._addr_edit.setMaxLength(8)
+        # Base address input
+        self._addr_label = QLabel(" 基址:")
+        self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
+        toolbar.addWidget(self._addr_label)
+        self._addr_edit = QLineEdit("0x00000000")
+        self._addr_edit.setFixedWidth(96)
         self._addr_edit.setFocusPolicy(Qt.StrongFocus)
         self._addr_edit.setStyleSheet("""
             QLineEdit {
@@ -319,15 +318,9 @@ class BPTParserApp(QMainWindow):
             }
         """)
         self._addr_edit.returnPressed.connect(self._on_base_addr_changed)
-        addr_w = QWidget()
-        addr_l = QHBoxLayout(addr_w)
-        addr_l.setContentsMargins(0, 0, 0, 0)
-        addr_l.setSpacing(0)
-        addr_l.addWidget(self._addr_label)
-        addr_l.addWidget(self._addr_edit)
         self._addr_label.setVisible(False)
         self._addr_edit.setVisible(False)
-        toolbar.addWidget(addr_w)
+        toolbar.addWidget(self._addr_edit)
 
         toolbar.addSeparator()
         toolbar.addAction(self._act_save)
@@ -451,7 +444,7 @@ class BPTParserApp(QMainWindow):
         self._clear_detail()
         self._add_recent(path)
         self.setWindowTitle(f"BPT Parser - {os.path.basename(path)}")
-        self._addr_edit.setText(f"{self._base_addr:08X}")
+        self._addr_edit.setText(f"0x{self._base_addr:08X}")
         self._addr_label.setVisible(True)
         self._addr_edit.setVisible(True)
 
@@ -460,7 +453,7 @@ class BPTParserApp(QMainWindow):
             self._base_addr = int(self._addr_edit.text(), 16)
         except ValueError:
             return
-        self._addr_edit.setText(f"{self._base_addr:08X}")
+        self._addr_edit.setText(f"0x{self._base_addr:08X}")
         self._refresh_hex_view()
 
     def _save_file(self):
