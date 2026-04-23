@@ -478,7 +478,7 @@ class BPTParserApp(QMainWindow):
         data = self._editor.get_current_data()
         try:
             if path.lower().endswith(".hex"):
-                write_hex(path, data)
+                write_hex(path, data, self._base_addr)
             else:
                 write_bin(path, data)
         except Exception as e:
