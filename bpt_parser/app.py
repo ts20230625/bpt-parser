@@ -300,9 +300,9 @@ class BPTParserApp(QMainWindow):
         toolbar.addWidget(spacer)
 
         # Base address input
-        self._addr_label = QLabel(" 基址:")
+        self._addr_label = QLabel(" Base 0x")
         self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
-        self._addr_edit = QLineEdit("0x00000000")
+        self._addr_edit = QLineEdit("00000000")
         self._addr_edit.setFixedWidth(96)
         self._addr_edit.setFocusPolicy(Qt.StrongFocus)
         self._addr_edit.setStyleSheet("""
@@ -449,7 +449,7 @@ class BPTParserApp(QMainWindow):
         self._clear_detail()
         self._add_recent(path)
         self.setWindowTitle(f"BPT Parser - {os.path.basename(path)}")
-        self._addr_edit.setText(f"0x{self._base_addr:08X}")
+        self._addr_edit.setText(f"{self._base_addr:08X}")
         self._addr_label.setVisible(True)
         self._addr_edit.setVisible(True)
 
@@ -458,7 +458,7 @@ class BPTParserApp(QMainWindow):
             self._base_addr = int(self._addr_edit.text(), 16)
         except ValueError:
             return
-        self._addr_edit.setText(f"0x{self._base_addr:08X}")
+        self._addr_edit.setText(f"{self._base_addr:08X}")
         self._refresh_hex_view()
 
     def _save_file(self):
