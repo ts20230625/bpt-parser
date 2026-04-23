@@ -300,7 +300,7 @@ class BPTParserApp(QMainWindow):
         toolbar.addWidget(spacer)
 
         # Base address input
-        self._addr_label = QLabel(" Base 0x")
+        self._addr_label = QLabel("Base: 0x")
         self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
         self._addr_edit = QLineEdit("00000000")
         self._addr_edit.setFixedWidth(96)
