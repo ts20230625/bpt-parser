@@ -160,7 +160,7 @@ QTextEdit {
     color: #89dceb;
     border: 1px solid #313244;
     border-radius: 6px;
-    font-family: "Consolas", "Courier New", monospace;
+    font-family: "Courier New", monospace;
     font-size: 11px;
     font-weight: bold;
     padding: 4px;
@@ -370,7 +370,7 @@ class BPTParserApp(QMainWindow):
 
         self._hex_view = QTextEdit()
         self._hex_view.setReadOnly(True)
-        self._hex_view.setFont(QFont("Consolas", 11))
+        self._hex_view.setFont(QFont("Courier New", 11))
 
         # Base address bar above hex view
         self._addr_label = QLabel("Base: 0x")
