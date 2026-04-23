@@ -157,12 +157,11 @@ QComboBox QAbstractItemView {
 }
 QTextEdit {
     background-color: #181825;
-    color: #89dceb;
+    color: #6c7086;
     border: 1px solid #313244;
     border-radius: 6px;
-    font-family: "Courier New", monospace;
-    font-size: 11px;
-    font-weight: bold;
+    font-family: "Microsoft YaHei", "Segoe UI", monospace;
+    font-size: 12px;
     padding: 4px;
     selection-background-color: #45475a;
 }
@@ -370,7 +369,7 @@ class BPTParserApp(QMainWindow):
 
         self._hex_view = QTextEdit()
         self._hex_view.setReadOnly(True)
-        self._hex_view.setFont(QFont("Courier New", 11))
+        self._hex_view.setFont(QFont("Microsoft YaHei", 12))
 
         # Base address bar above hex view
         self._addr_label = QLabel("Base: 0x")
