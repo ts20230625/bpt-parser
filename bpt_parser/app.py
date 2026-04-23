@@ -299,13 +299,13 @@ class BPTParserApp(QMainWindow):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         toolbar.addWidget(spacer)
 
-        # Base address input
+        # Base address input (wrapped for toolbar focus)
         self._addr_label = QLabel(" 基址: 0x")
         self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
-        toolbar.addWidget(self._addr_label)
         self._addr_edit = QLineEdit("00000000")
         self._addr_edit.setFixedWidth(80)
         self._addr_edit.setMaxLength(8)
+        self._addr_edit.setFocusPolicy(Qt.StrongFocus)
         self._addr_edit.setStyleSheet("""
             QLineEdit {
                 background-color: #181825;
@@ -318,9 +318,14 @@ class BPTParserApp(QMainWindow):
             }
         """)
         self._addr_edit.returnPressed.connect(self._on_base_addr_changed)
+        addr_w = QWidget()
+        addr_l = QHBoxLayout(addr_w)
+        addr_l.setContentsMargins(0, 0, 0, 0)
+        addr_l.addWidget(self._addr_label)
+        addr_l.addWidget(self._addr_edit)
         self._addr_label.setVisible(False)
         self._addr_edit.setVisible(False)
-        toolbar.addWidget(self._addr_edit)
+        toolbar.addWidget(addr_w)
 
         toolbar.addSeparator()
         toolbar.addAction(self._act_save)
