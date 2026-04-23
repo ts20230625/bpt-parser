@@ -304,8 +304,8 @@ class BPTParserApp(QMainWindow):
         self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
         toolbar.addWidget(self._addr_label)
         self._addr_edit = QLineEdit("00000000")
-        self._addr_edit.setFixedWidth(72)
-        self._addr_edit.setInputMask("HHHHHHHH")
+        self._addr_edit.setFixedWidth(80)
+        self._addr_edit.setMaxLength(8)
         self._addr_edit.setStyleSheet("""
             QLineEdit {
                 background-color: #181825;
