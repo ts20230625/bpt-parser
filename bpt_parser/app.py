@@ -368,7 +368,7 @@ class BPTParserApp(QMainWindow):
 
         self._hex_view = QTextEdit()
         self._hex_view.setReadOnly(True)
-        self._hex_view.setFont(QFont("Consolas", 10))
+        self._hex_view.setFont(QFont("Consolas", 11))
 
         # Base address bar above hex view
         self._addr_label = QLabel("Base: 0x")
