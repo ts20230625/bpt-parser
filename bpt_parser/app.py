@@ -299,34 +299,6 @@ class BPTParserApp(QMainWindow):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         toolbar.addWidget(spacer)
 
-        # Base address input
-        self._addr_label = QLabel("Base: 0x")
-        self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
-        self._addr_edit = QLineEdit("00000000")
-        self._addr_edit.setFixedWidth(96)
-        self._addr_edit.setFocusPolicy(Qt.StrongFocus)
-        self._addr_edit.setStyleSheet("""
-            QLineEdit {
-                background-color: #181825;
-                color: #89b4fa;
-                border: 1px solid #313244;
-                border-radius: 4px;
-                padding: 2px 4px;
-                font-size: 11px;
-                font-family: monospace;
-            }
-        """)
-        self._addr_edit.returnPressed.connect(self._on_base_addr_changed)
-        addr_w = QWidget()
-        addr_l = QHBoxLayout(addr_w)
-        addr_l.setContentsMargins(0, 0, 0, 0)
-        addr_l.setSpacing(0)
-        addr_l.addWidget(self._addr_label)
-        addr_l.addWidget(self._addr_edit)
-        self._addr_label.setVisible(False)
-        self._addr_edit.setVisible(False)
-        toolbar.addWidget(addr_w)
-
         toolbar.addSeparator()
         toolbar.addAction(self._act_save)
         toolbar.addSeparator()
@@ -397,7 +369,40 @@ class BPTParserApp(QMainWindow):
         self._hex_view = QTextEdit()
         self._hex_view.setReadOnly(True)
         self._hex_view.setFont(QFont("Consolas", 10))
-        right_splitter.addWidget(self._hex_view)
+
+        # Base address bar above hex view
+        self._addr_label = QLabel("Base: 0x")
+        self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
+        self._addr_edit = QLineEdit("00000000")
+        self._addr_edit.setFixedWidth(80)
+        self._addr_edit.setStyleSheet("""
+            QLineEdit {
+                background-color: #181825;
+                color: #89b4fa;
+                border: 1px solid #313244;
+                border-radius: 4px;
+                padding: 2px 4px;
+                font-size: 11px;
+                font-family: monospace;
+            }
+        """)
+        self._addr_edit.returnPressed.connect(self._on_base_addr_changed)
+        addr_bar = QHBoxLayout()
+        addr_bar.setContentsMargins(4, 2, 4, 2)
+        addr_bar.addWidget(self._addr_label)
+        addr_bar.addWidget(self._addr_edit)
+        addr_bar.addStretch()
+
+        hex_panel = QWidget()
+        hex_layout = QVBoxLayout(hex_panel)
+        hex_layout.setContentsMargins(0, 0, 0, 0)
+        hex_layout.setSpacing(0)
+        hex_layout.addLayout(addr_bar)
+        hex_layout.addWidget(self._hex_view)
+        self._addr_label.setVisible(False)
+        self._addr_edit.setVisible(False)
+
+        right_splitter.addWidget(hex_panel)
 
         right_splitter.setSizes([250, 350])
 
