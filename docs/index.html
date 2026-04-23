@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BPT Parser - 二进制参数表解析工具</title>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", "Segoe UI", sans-serif; background: #1e1e2e; color: #cdd6f4; line-height: 1.7; }
+a { color: #89b4fa; text-decoration: none; }
+a:hover { color: #b4befe; }
+.hero { text-align: center; padding: 80px 20px 60px; background: linear-gradient(135deg, #1e1e2e 0%, #181825 50%, #11111b 100%); }
+.hero h1 { font-size: 3em; color: #89b4fa; margin-bottom: 12px; letter-spacing: 2px; }
+.hero .icon { font-size: 4em; margin-bottom: 16px; display: inline-block; background: #313244; border-radius: 20px; padding: 16px 28px; }
+.hero p { font-size: 1.2em; color: #a6adc8; max-width: 600px; margin: 0 auto 30px; }
+.btn-download { display: inline-block; background: linear-gradient(135deg, #89b4fa, #74c7ec); color: #1e1e2e; padding: 14px 40px; border-radius: 12px; font-size: 1.1em; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; }
+.btn-download:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(137,180,250,0.3); color: #1e1e2e; }
+.section { max-width: 960px; margin: 0 auto; padding: 60px 24px; }
+.section h2 { font-size: 1.8em; color: #cba6f7; margin-bottom: 24px; border-bottom: 2px solid #313244; padding-bottom: 10px; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 24px; }
+.card { background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 24px; transition: border-color 0.3s; }
+.card:hover { border-color: #89b4fa; }
+.card h3 { color: #89b4fa; font-size: 1.15em; margin-bottom: 8px; }
+.card p { color: #a6adc8; font-size: 0.95em; }
+.card .tag { display: inline-block; background: rgba(137,180,250,0.15); color: #89b4fa; padding: 2px 10px; border-radius: 6px; font-size: 0.8em; margin-top: 10px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+th { background: #181825; color: #cba6f7; text-align: left; padding: 10px 14px; font-weight: 600; border-bottom: 2px solid #313244; }
+td { padding: 10px 14px; border-bottom: 1px solid #313244; font-size: 0.92em; }
+tr:hover td { background: rgba(49,50,68,0.5); }
+.screenshot { text-align: center; margin: 30px 0; }
+.screenshot img { max-width: 100%; border-radius: 12px; border: 1px solid #313244; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+.theme-label { display: inline-block; width: 16px; height: 16px; border-radius: 4px; vertical-align: middle; margin-right: 6px; }
+.footer { text-align: center; padding: 40px 20px; color: #585b70; font-size: 0.85em; border-top: 1px solid #313244; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="icon">
+    <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="4" width="56" height="56" rx="12" fill="none" stroke="#89b4fa" stroke-width="2.5"/>
+      <text x="32" y="38" text-anchor="middle" fill="#89b4fa" font-family="monospace" font-size="20" font-weight="bold">BPT</text>
+      <circle cx="18" cy="52" r="3" fill="#f38ba8"/><circle cx="28" cy="52" r="3" fill="#fab387"/>
+      <circle cx="38" cy="52" r="3" fill="#a6e3a1"/><circle cx="48" cy="52" r="3" fill="#89b4fa"/>
+    </svg>
+  </div>
+  <h1>BPT Parser</h1>
+  <p>嵌入式 SoC 二进制参数表 (Binary Parameter Table) 解析与编辑工具，支持 Intel HEX 和 BIN 格式</p>
+  <a class="btn-download" href="#download">下载 Windows 版</a>
+</div>
+
+<div class="section">
+  <h2>功能特性</h2>
+  <div class="features">
+    <div class="card">
+      <h3>文件导入导出</h3>
+      <p>支持导入 Intel HEX (.hex) 和原始二进制 (.bin) 文件，自动识别格式。支持另存为 HEX 或 BIN 格式导出。</p>
+      <span class="tag">HEX</span> <span class="tag">BIN</span>
+    </div>
+    <div class="card">
+      <h3>完整字段解析</h3>
+      <p>解析 BPT 全部字段：Header、8 个 IIB 镜像信息块、RCP 根证书包、签名、Trailer。枚举字段显示中文名称。</p>
+      <span class="tag">BPT Header</span> <span class="tag">IIB</span> <span class="tag">RCP</span>
+    </div>
+    <div class="card">
+      <h3>字段编辑</h3>
+      <p>支持修改所有可编辑字段（整数、枚举、位域、字节序列），修改后实时同步更新 Hex 视图和字段树。</p>
+      <span class="tag">实时同步</span>
+    </div>
+    <div class="card">
+      <h3>Hex 原始数据视图</h3>
+      <p>右侧面板显示完整 Hex 转储，点击字段自动高亮对应字节区域并滚动到居中位置。支持修改基地址偏移。</p>
+      <span class="tag">高亮定位</span>
+    </div>
+    <div class="card">
+      <h3>自动计算</h3>
+      <p>修改任意字段后自动重算 CRC32（覆盖 0x0~0xFEB）和 PSN 反码（0xFFFFFFFF - PSN），无需手动操作。</p>
+      <span class="tag">CRC32</span> <span class="tag">PSN</span>
+    </div>
+    <div class="card">
+      <h3>撤销与恢复</h3>
+      <p>支持撤销所有改动（一键恢复到导入时的原始数据），也支持单个字段独立恢复（仅被修改的字段显示恢复按钮）。</p>
+      <span class="tag">单字段恢复</span> <span class="tag">全部撤销</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>界面布局</h2>
+  <div class="screenshot">
+    <svg width="720" height="420" viewBox="0 0 720 420" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
+      <rect width="720" height="420" rx="10" fill="#181825" stroke="#313244"/>
+      <!-- Toolbar -->
+      <rect x="0" y="0" width="720" height="36" rx="10" fill="#11111b"/>
+      <rect x="0" y="18" width="720" height="18" fill="#11111b"/>
+      <text x="20" y="24" fill="#89b4fa" font-size="12" font-family="sans-serif">导入</text>
+      <text x="80" y="24" fill="#cba6f7" font-size="12" font-family="sans-serif">最近文件 ▾</text>
+      <text x="580" y="24" fill="#89b4fa" font-size="12" font-family="sans-serif">另存为</text>
+      <text x="650" y="24" fill="#f38ba8" font-size="12" font-family="sans-serif">撤销</text>
+      <!-- P1 Tree -->
+      <rect x="4" y="40" width="210" height="376" fill="#1e1e2e" rx="6"/>
+      <rect x="4" y="40" width="210" height="22" fill="#181825" rx="6"/>
+      <rect x="4" y="56" width="210" height="6" fill="#181825"/>
+      <text x="30" y="56" fill="#a6adc8" font-size="10" font-family="sans-serif">字段</text>
+      <text x="160" y="56" fill="#a6adc8" font-size="10" font-family="sans-serif">值</text>
+      <text x="14" y="80" fill="#89b4fa" font-size="11" font-family="sans-serif">▼ BPT Header</text>
+      <text x="24" y="96" fill="#cdd6f4" font-size="10" font-family="sans-serif">Tag</text><text x="130" y="96" fill="#6c7086" font-size="9" font-family="monospace">0x42505402</text>
+      <text x="24" y="112" fill="#cdd6f4" font-size="10" font-family="sans-serif">Secure Version</text><text x="160" y="112" fill="#6c7086" font-size="9" font-family="monospace">0x00000000</text>
+      <text x="24" y="128" fill="#cdd6f4" font-size="10" font-family="sans-serif">Digest Algorithm</text><text x="170" y="128" fill="#6c7086" font-size="9">SHA256</text>
+      <text x="14" y="152" fill="#89b4fa" font-size="11" font-family="sans-serif">▼ IIB #0</text>
+      <text x="24" y="168" fill="#cdd6f4" font-size="10" font-family="sans-serif">Image Type</text><text x="130" y="168" fill="#6c7086" font-size="9">Normal</text>
+      <text x="24" y="184" fill="#cdd6f4" font-size="10" font-family="sans-serif">Load Address</text><text x="140" y="184" fill="#6c7086" font-size="9" font-family="monospace">0x00000000</text>
+      <text x="14" y="208" fill="#585b70" font-size="11" font-family="sans-serif">▶ IIB #1</text>
+      <text x="14" y="228" fill="#585b70" font-size="11" font-family="sans-serif">▶ RCP</text>
+      <text x="14" y="248" fill="#585b70" font-size="11" font-family="sans-serif">▶ Signature</text>
+      <text x="14" y="268" fill="#585b70" font-size="11" font-family="sans-serif">▶ BPT Trailer</text>
+      <!-- D1 Detail -->
+      <rect x="218" y="40" width="498" height="170" fill="#1e1e2e" rx="6"/>
+      <rect x="218" y="40" width="498" height="22" fill="#181825" rx="6"/>
+      <rect x="218" y="56" width="498" height="6" fill="#181825"/>
+      <text x="230" y="56" fill="#cba6f7" font-size="10" font-family="sans-serif">Load Address</text>
+      <text x="230" y="80" fill="#a6adc8" font-size="10">名称:</text><text x="280" y="80" fill="#89b4fa" font-size="10" font-weight="bold">Load Address</text>
+      <text x="230" y="98" fill="#a6adc8" font-size="10">偏移 | 大小:</text><text x="310" y="98" fill="#cdd6f4" font-size="10">0x002C (44) | 4 字节</text>
+      <text x="230" y="116" fill="#a6adc8" font-size="10">描述:</text><text x="280" y="116" fill="#cdd6f4" font-size="10">镜像加载地址，4字节对齐</text>
+      <text x="230" y="140" fill="#a6adc8" font-size="10">值:</text>
+      <rect x="280" y="128" width="120" height="20" rx="4" fill="#181825" stroke="#313244"/>
+      <text x="286" y="142" fill="#89b4fa" font-size="10" font-family="monospace">0x00000000</text>
+      <!-- P2 Hex View -->
+      <rect x="218" y="214" width="498" height="202" fill="#1e1e2e" rx="6"/>
+      <text x="224" y="228" fill="#a6adc8" font-size="9">Base: 0x</text>
+      <rect x="278" y="218" width="68" height="14" rx="3" fill="#181825" stroke="#313244"/>
+      <text x="282" y="229" fill="#89b4fa" font-size="9" font-family="monospace">08100000</text>
+      <text x="224" y="248" fill="#6c7086" font-size="9" font-family="monospace">08100000:  42 50 54 02 00 00 10 00  00 00 00 00 03 00 00 00  BPT...........</text>
+      <rect x="341" y="239" width="72" height="13" rx="2" fill="#f38ba8" opacity="0.35"/>
+      <text x="224" y="264" fill="#6c7086" font-size="9" font-family="monospace">08100010:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................</text>
+      <text x="224" y="280" fill="#6c7086" font-size="9" font-family="monospace">08100020:  EA E2 7C 00 00 00 00 00  00 00 00 00 00 00 00 00  ..|.............</text>
+      <text x="224" y="296" fill="#6c7086" font-size="9" font-family="monospace">08100030:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................</text>
+      <text x="224" y="312" fill="#6c7086" font-size="9" font-family="monospace">08100040:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................</text>
+    </svg>
+  </div>
+</div>
+
+<div class="section">
+  <h2>BPT 数据结构</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>结构</th><th>偏移</th><th>大小</th><th>说明</th></tr>
+    <tr><td>BPT Header</td><td>0x000</td><td>32 字节</td><td>标签、版本、摘要算法、密钥选择</td></tr>
+    <tr><td>IIB #0 ~ #7</td><td>0x020</td><td>各 124 字节</td><td>8 个镜像信息块：设备ID、镜像类型、加载地址、入口点、哈希</td></tr>
+    <tr><td>RCP</td><td>0x400</td><td>1044 字节</td><td>根证书包：ROT ID、公钥类型（RSA/ECDSA/SM2）、公钥数据</td></tr>
+    <tr><td>Signature</td><td>0x814</td><td>512 字节</td><td>数字签名</td></tr>
+    <tr><td>Reserved</td><td>0xA14</td><td>512 + 984 字节</td><td>保留区域</td></tr>
+    <tr><td>BPT Trailer</td><td>0xFEC</td><td>20 字节</td><td>CRC32、包序列号 (PSN)、PSN 反码</td></tr>
+  </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>支持的枚举字段</h2>
+  <div class="features">
+    <div class="card">
+      <h3>摘要算法</h3>
+      <p>SHA256 (0x03) · SHA512 (0x05) · SM3 (0x06)</p>
+    </div>
+    <div class="card">
+      <h3>镜像类型</h3>
+      <p>Normal (0x00) · SCB (0x01) · HSMFW (0x0E)</p>
+    </div>
+    <div class="card">
+      <h3>目标核心</h3>
+      <p>Cluster0-Core0 (0x00) · SE (0x03) · LP (0x04)</p>
+    </div>
+    <div class="card">
+      <h3>公钥类型</h3>
+      <p>RSA1024/2048/3072/4096 · ECDSA P256/P384 · SM2</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="download">
+  <h2>下载</h2>
+  <div class="card" style="text-align: center; padding: 40px;">
+    <h3>BPT Parser for Windows</h3>
+    <p style="margin: 12px 0;">单文件 EXE，无需安装 Python 环境，双击即可运行</p>
+    <p style="color: #585b70; font-size: 0.85em;">Windows 10/11 · 32 位 · 约 30MB</p>
+    <p style="margin-top: 20px; color: #a6adc8;">请从项目仓库获取最新版本</p>
+  </div>
+</div>
+
+<div class="section">
+  <h2>主题配色</h2>
+  <p style="margin-bottom: 16px; color: #a6adc8;">采用 Catppuccin Mocha 暗色主题</p>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+    <div><span class="theme-label" style="background:#1e1e2e"></span>背景</div>
+    <div><span class="theme-label" style="background:#181825"></span>面板</div>
+    <div><span class="theme-label" style="background:#89b4fa"></span>强调</div>
+    <div><span class="theme-label" style="background:#cba6f7"></span>次强调</div>
+    <div><span class="theme-label" style="background:#f38ba8"></span>高亮</div>
+    <div><span class="theme-label" style="background:#fab387"></span>修改</div>
+    <div><span class="theme-label" style="background:#a6e3a1"></span>正常值</div>
+  </div>
+</div>
+
+<div class="footer">
+  BPT Parser · 嵌入式 SoC 二进制参数表解析工具 · Python + PyQt5
+</div>
+
+</body>
+</html>

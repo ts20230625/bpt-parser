@@ -3,3 +3,6 @@ __pycache__/
 .claude/
 .superpowers/
 memory.hex
+build/
+dist/
+*.spec
