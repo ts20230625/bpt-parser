@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QSizePolicy,
 )
 from PyQt5.QtCore import Qt, QSize, QSettings
-from PyQt5.QtGui import QColor, QFont, QTextCharFormat
+from PyQt5.QtGui import QColor, QFont, QTextCharFormat, QIcon
 
 from bpt_parser.hex_io import read_hex, read_bin, write_hex, write_bin
 from bpt_parser.parser import BPTParser, ParsedStructure
@@ -247,6 +247,9 @@ class BPTParserApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("BPT Parser")
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "bpt_parser.ico")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
         self.setMinimumSize(820, 600)
         self.resize(820, 700)
         self._editor = None
