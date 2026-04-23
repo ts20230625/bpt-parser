@@ -530,6 +530,8 @@ class BPTParserApp(QMainWindow):
                 field_item = QTreeWidgetItem([fld.name, val_str])
                 field_item.setData(0, Qt.UserRole, ("field", fld, child))
                 field_item.setForeground(1, dim_color)
+                if fld.name in ("Load Address", "Entry Point"):
+                    field_item.setForeground(0, QColor("#f9e2af"))
                 item.addChild(field_item)
 
         self._tree.setHeaderLabels(["字段", "值"])
