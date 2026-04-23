@@ -295,6 +295,10 @@ class BPTParserApp(QMainWindow):
         toolbar.addWidget(self._recent_btn)
         self._refresh_recent_menu()
 
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        toolbar.addWidget(spacer)
+
         # Base address input
         self._addr_label = QLabel(" 基址: 0x")
         self._addr_label.setStyleSheet("color: #a6adc8; font-size: 11px;")
@@ -317,10 +321,6 @@ class BPTParserApp(QMainWindow):
         self._addr_label.setVisible(False)
         self._addr_edit.setVisible(False)
         toolbar.addWidget(self._addr_edit)
-
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        toolbar.addWidget(spacer)
 
         toolbar.addSeparator()
         toolbar.addAction(self._act_save)
