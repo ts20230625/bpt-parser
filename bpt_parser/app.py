@@ -157,11 +157,11 @@ QComboBox QAbstractItemView {
 }
 QTextEdit {
     background-color: #181825;
-    color: #a6e3a1;
+    color: #89dceb;
     border: 1px solid #313244;
     border-radius: 6px;
     font-family: "Consolas", "Courier New", monospace;
-    font-size: 12px;
+    font-size: 11px;
     padding: 4px;
     selection-background-color: #45475a;
 }
