@@ -282,15 +282,15 @@ class BPTParserApp(QMainWindow):
         self._recent_btn.setStyleSheet("""
             QToolButton {
                 background-color: rgba(49, 50, 68, 160);
-                color: #cba6f7;
-                border: 1px solid rgba(203, 166, 247, 50);
+                color: #fab387;
+                border: 1px solid rgba(250, 179, 135, 50);
                 border-radius: 6px;
                 padding: 3px 10px;
                 font-size: 11px;
             }
             QToolButton:hover {
                 background-color: rgba(69, 71, 90, 200);
-                border: 1px solid rgba(203, 166, 247, 100);
+                border: 1px solid rgba(250, 179, 135, 100);
             }
         """)
         toolbar.addWidget(self._recent_btn)
