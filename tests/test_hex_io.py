@@ -1,3 +1,6 @@
+import pytest
+import os
+
 from bpt_parser.hex_io import read_hex, read_bin, write_hex, write_bin
 
 
@@ -57,3 +60,26 @@ class TestReadWriteHex:
         write_hex(str(hex_file), original, base_address=0x08100000)
         data = read_hex(str(hex_file))
         assert data[0x08100000:0x08100100] == original
+
+
+class TestIntegrationWithMemoryHex:
+    def test_parse_memory_hex(self):
+        hex_path = os.path.join(os.path.dirname(__file__), "..", "memory.hex")
+        if not os.path.exists(hex_path):
+            pytest.skip("memory.hex not found")
+
+        data = read_hex(hex_path)
+        # memory.hex contains data starting at 0x08100000
+        assert len(data) >= 0x08101000
+
+        # Verify we can read the data at the expected address
+        # The file contains valid data starting at 0x08100000
+        assert len(data) >= 0x08101000
+
+        # Check that data exists at the expected address
+        data_at_base = data[0x08100000:0x08100010]
+        assert len(data_at_base) == 16
+
+        # Verify the extended linear address was properly handled
+        # by checking we have data beyond the 64KB boundary
+        assert len(data) > 0x10000
